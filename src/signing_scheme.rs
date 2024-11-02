@@ -3,7 +3,7 @@ pub trait SigningScheme {
     type VerifyingKey;
     type Signature;
 
-    fn keygen() -> (Self::SigningKey, Self::VerifyingKey);
-    fn sign(sk: &Self::SigningKey, m: &str) -> Self::Signature;
-    fn verify(pk: &Self::VerifyingKey, m: &str, t: &Self::Signature) -> bool;
+    fn keygen(&mut self) -> (Self::SigningKey, Self::VerifyingKey);
+    fn sign(&mut self, sk: &Self::SigningKey, m: &str) -> Self::Signature;
+    fn verify(&mut self, pk: &Self::VerifyingKey, m: &str, t: &Self::Signature) -> bool;
 }
