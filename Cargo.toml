@@ -9,6 +9,7 @@ edition = "2021"
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 libc = "0.2.161"
 rand = "0.8.5"
+netsim = { path = "../netsim" }
 
 [dev-dependencies]
 criterion = "0.5.1"

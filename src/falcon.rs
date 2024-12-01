@@ -1,4 +1,4 @@
-use crate::signing_scheme::SigningScheme;
+use crate::signing_scheme::{SigningScheme, ToBytes};
 use libc::{c_int, c_uint, size_t};
 
 #[repr(C)]
@@ -113,6 +113,12 @@ impl Falcon {
     }
 }
 
+impl ToBytes for Vec<u8> {
+    fn to_bytes(&self) -> Vec<u8> {
+        self.clone()
+    }
+}
+
 impl SigningScheme for Falcon {
     type SigningKey = Vec<u8>;
 
@@ -145,7 +151,7 @@ impl SigningScheme for Falcon {
         (sk, pk)
     }
 
-    fn sign(&mut self, sk: &Self::SigningKey, m: &str) -> Self::Signature {
+    fn sign(&mut self, sk: &Self::SigningKey, m: &[u8]) -> Self::Signature {
         let mut t: Self::Signature = vec![0; self.sig_maxsize()];
         let mut t_size: size_t = t.len();
         let mut tmp: Vec<u8> = vec![0; self.tmpsize_sign()];
@@ -174,7 +180,7 @@ impl SigningScheme for Falcon {
         t
     }
 
-    fn verify(&mut self, pk: &Self::VerifyingKey, m: &str, t: &Self::Signature) -> bool {
+    fn verify(&mut self, pk: &Self::VerifyingKey, m: &[u8], t: &Self::Signature) -> bool {
         let mut tmp: Vec<u8> = vec![0; self.tmpsize_verify()];
 
         unsafe {

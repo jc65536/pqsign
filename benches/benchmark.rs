@@ -12,15 +12,15 @@ fn bench_scheme<S: SigningScheme>(c: &mut Criterion, mut scheme: S) {
     let m = "Hello World!";
 
     c.bench_with_input(BenchmarkId::new("sign", m), &(&sk, m), |b, &(sk, m)| {
-        b.iter(|| scheme.sign(sk, m))
+        b.iter(|| scheme.sign(sk, m.as_bytes()))
     });
 
-    let t = scheme.sign(&sk, m);
+    let t = scheme.sign(&sk, m.as_bytes());
 
     c.bench_with_input(
         BenchmarkId::new("verify", m),
         &(&pk, m, &t),
-        |b, &(pk, m, t)| b.iter(|| scheme.verify(pk, m, t)),
+        |b, &(pk, m, t)| b.iter(|| scheme.verify(pk, m.as_bytes(), t)),
     );
 }
 

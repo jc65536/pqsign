@@ -1,10 +1,41 @@
-use crate::signing_scheme::SigningScheme;
-use ed25519_dalek::{Signature, SigningKey, VerifyingKey};
+use ed25519_dalek::SigningKey;
+
+use crate::signing_scheme::{SigningScheme, ToBytes};
 
 pub struct Eddsa;
 
+pub struct VerifyingKey(ed25519_dalek::VerifyingKey);
+
+impl ToBytes for VerifyingKey {
+    fn to_bytes(&self) -> Vec<u8> {
+        Vec::from(self.0.to_bytes())
+    }
+}
+
+impl From<Vec<u8>> for VerifyingKey {
+    fn from(value: Vec<u8>) -> Self {
+        VerifyingKey(ed25519_dalek::VerifyingKey::from_bytes(&value.try_into().unwrap()).unwrap())
+    }
+}
+
+pub struct Signature(ed25519_dalek::Signature);
+
+impl ToBytes for Signature {
+    fn to_bytes(&self) -> Vec<u8> {
+        Vec::from(self.0.to_bytes())
+    }
+}
+
+impl From<Vec<u8>> for Signature {
+    fn from(value: Vec<u8>) -> Self {
+        Signature(ed25519_dalek::Signature::from_bytes(
+            &value.try_into().unwrap(),
+        ))
+    }
+}
+
 impl SigningScheme for Eddsa {
-    type SigningKey = SigningKey;
+    type SigningKey = ed25519_dalek::SigningKey;
 
     type VerifyingKey = VerifyingKey;
 
@@ -14,16 +45,21 @@ impl SigningScheme for Eddsa {
         use rand::rngs::OsRng;
         let sk = SigningKey::generate(&mut OsRng);
         let pk = sk.verifying_key();
-        (sk, pk)
+        (sk, VerifyingKey(pk))
     }
 
-    fn sign(&mut self, sk: &Self::SigningKey, m: &str) -> Self::Signature {
+    fn sign(&mut self, sk: &Self::SigningKey, m: &[u8]) -> Self::Signature {
         use ed25519_dalek::Signer;
-        sk.sign(m.as_bytes())
+        Signature(sk.sign(m))
     }
 
-    fn verify(&mut self, pk: &Self::VerifyingKey, m: &str, t: &Self::Signature) -> bool {
+    fn verify(
+        &mut self,
+        VerifyingKey(pk): &Self::VerifyingKey,
+        m: &[u8],
+        Signature(t): &Self::Signature,
+    ) -> bool {
         use ed25519_dalek::Verifier;
-        pk.verify(m.as_bytes(), t).is_ok()
+        pk.verify(m, t).is_ok()
     }
 }
