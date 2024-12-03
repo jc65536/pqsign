@@ -21,8 +21,12 @@ pub struct ServerCtx {
     sk_end: Vec<u8>,
 }
 
-impl PqcTls {
-    pub fn new() -> (ClientCtx, ServerCtx) {
+impl Tls for PqcTls {
+    type CX = ClientCtx;
+    type SX = ServerCtx;
+    type S = Falcon;
+
+    fn new() -> (ClientCtx, ServerCtx) {
         let (cert_chain, pk_root, sk_root, sk_end) = Self::make_cert_chain();
 
         let falcon1 = Falcon::new(Degree::F512, Some("seed1".as_bytes()));
@@ -41,12 +45,6 @@ impl PqcTls {
             },
         )
     }
-}
-
-impl Tls for PqcTls {
-    type CX = ClientCtx;
-    type SX = ServerCtx;
-    type S = Falcon;
 
     fn make_cert_chain() -> (
         Vec<SignedCertificate>,
@@ -82,7 +80,7 @@ impl Tls for PqcTls {
             let cert: SignedCertificate =
                 read_bytes_stream(stream, &format!("client_verify_cert_{i}")).into();
             certificate_chain.push(cert.clone());
-            println!("[client_verify] Received certificate {:?}", cert);
+            // println!("[client_verify] Received certificate {i}");
         }
 
         // Verify root cert is signed by pk_root
@@ -96,13 +94,13 @@ impl Tls for PqcTls {
         if !status {
             println!("[client_verify] Root cert verification failed");
 
-            let expected_sig = certificate_chain[2]
+            let _expected_sig = certificate_chain[2]
                 .certificate
                 .clone()
                 .sign(&mut ctx.falcon, &ctx.sk_root)
                 .signature;
 
-            println!("[client_verify] Expected signature {expected_sig:?}");
+            println!("[client_verify] Expected signature {_expected_sig:?}");
             return false;
         }
 

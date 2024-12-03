@@ -19,8 +19,12 @@ pub struct ServerCtx {
     sk_end: <Eddsa as SigningScheme>::SigningKey,
 }
 
-impl PlainTls {
-    pub fn new() -> (ClientCtx, ServerCtx) {
+impl Tls for PlainTls {
+    type CX = ClientCtx;
+    type SX = ServerCtx;
+    type S = Eddsa;
+
+    fn new() -> (ClientCtx, ServerCtx) {
         let (cert_chain, pk_root, sk_root, sk_end) = Self::make_cert_chain();
 
         (
@@ -28,12 +32,6 @@ impl PlainTls {
             ServerCtx { cert_chain, sk_end },
         )
     }
-}
-
-impl Tls for PlainTls {
-    type CX = ClientCtx;
-    type SX = ServerCtx;
-    type S = Eddsa;
 
     fn make_cert_chain() -> (
         Vec<SignedCertificate>,
@@ -69,7 +67,7 @@ impl Tls for PlainTls {
             let cert: SignedCertificate =
                 read_bytes_stream(stream, &format!("client_verify_cert_{i}")).into();
             certificate_chain.push(cert.clone());
-            println!("[client_verify] Received certificate {:?}", cert);
+            // println!("[client_verify] Received certificate {i}");
         }
 
         // Verify root cert is signed by pk_root
@@ -83,13 +81,13 @@ impl Tls for PlainTls {
         if !status {
             println!("[client_verify] Root cert verification failed");
 
-            let expected_sig = certificate_chain[2]
+            let _expected_sig = certificate_chain[2]
                 .certificate
                 .clone()
                 .sign(&mut Eddsa, &ctx.sk_root)
                 .signature;
 
-            println!("[client_verify] Expected signature {expected_sig:?}");
+            println!("[client_verify] Expected signature {_expected_sig:?}");
             return false;
         }
 

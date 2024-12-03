@@ -10,6 +10,8 @@ ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 libc = "0.2.161"
 rand = "0.8.5"
 netsim = { path = "../netsim" }
+ndarray = "0.16.1"
+ndarray-npy = "0.9.1"
 
 [dev-dependencies]
 criterion = "0.5.1"
@@ -17,3 +19,6 @@ criterion = "0.5.1"
 [[bench]]
 name = "benchmark"
 harness = false
+
+# [profile.release]
+# debug = true

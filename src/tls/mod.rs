@@ -16,7 +16,7 @@ fn read_bytes(value: &Vec<u8>, mut start: usize) -> (&[u8], usize) {
     (&value[start..start + len], start + len)
 }
 
-fn read_bytes_stream(reader: &mut impl Read, dbg: &str) -> Vec<u8> {
+fn read_bytes_stream(reader: &mut impl Read, _dbg: &str) -> Vec<u8> {
     let mut len_bytes = [0; size_of::<usize>()];
     reader.read_exact(&mut len_bytes).unwrap();
     let len = usize::from_be_bytes(len_bytes);
@@ -130,8 +130,8 @@ impl From<Vec<u8>> for SignedCertificate {
 }
 
 pub trait Tls {
-    type CX;
-    type SX;
+    type CX: Send;
+    type SX: Send;
     type S: SigningScheme;
 
     /// Returns (certificate chain, root CA public key, root CA private key, end entity private key)
@@ -143,7 +143,7 @@ pub trait Tls {
     );
 
     fn _make_cert_chain(
-        mut scheme: &mut Self::S,
+        scheme: &mut Self::S,
     ) -> (
         Vec<SignedCertificate>,
         <Self::S as SigningScheme>::VerifyingKey,
@@ -186,6 +186,7 @@ pub trait Tls {
         (certs, pk_root, sk_root, sk_end)
     }
 
+    fn new() -> (Self::CX, Self::SX);
     fn client_transcript(client_ctx: &mut Self::CX, stream: &mut TcpStream);
     fn server_certificate(server_ctx: &mut Self::SX, stream: &mut TcpStream);
     fn server_certificate_verify(server_ctx: &mut Self::SX, stream: &mut TcpStream);

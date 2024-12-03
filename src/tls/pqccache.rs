@@ -27,8 +27,12 @@ pub struct ServerCtx {
     id: u32,
 }
 
-impl PqcWithCachingTls {
-    pub fn new() -> (ClientCtx, ServerCtx) {
+impl Tls for PqcWithCachingTls {
+    type CX = ClientCtx;
+    type SX = ServerCtx;
+    type S = Falcon;
+
+    fn new() -> (ClientCtx, ServerCtx) {
         let (cert_chain, pk_root, _, sk_end) = Self::make_cert_chain();
 
         let mut falcon1 = Falcon::new(Degree::F512, Some("seed1".as_bytes()));
@@ -56,12 +60,6 @@ impl PqcWithCachingTls {
             },
         )
     }
-}
-
-impl Tls for PqcWithCachingTls {
-    type CX = ClientCtx;
-    type SX = ServerCtx;
-    type S = Falcon;
 
     fn make_cert_chain() -> (
         Vec<SignedCertificate>,
@@ -134,7 +132,7 @@ impl Tls for PqcWithCachingTls {
             let cert: SignedCertificate =
                 read_bytes_stream(stream, &format!("client_verify_cert_{i}")).into();
             certificate_chain.push(cert.clone());
-            println!("[client_verify] Received certificate {:?}", cert);
+            // println!("[client_verify] Received certificate {i}");
         }
 
         // Verify root cert is signed by pk_root
