@@ -10,14 +10,12 @@ delay = np.arange(0, 200, 10)
 
 delay, buf_size = np.meshgrid(delay, buf_size)
 
-time_plain = np.load(f"../out/plain-tls.npy")
-time_pqc = np.load(f"../out/pqc-tls.npy")
-time_caching = np.load(f"../out/pqc-with-caching.npy")
+time_client_caching = np.load("../out/client-caching-tls.npy")
+time_plain = np.load("../out/plain-tls.npy")
+time_pqc = np.load("../out/pqc-tls.npy")
+time_caching = np.load("../out/pqc-with-caching.npy")
 
 tmax = max(time_plain.max(), time_pqc.max(), time_caching.max())
-
-fig = plt.figure(figsize=(6, 14))
-gs = GridSpec(1, 4, width_ratios=(1, 1, 1, 0.1))
 
 cmap = LinearSegmentedColormap.from_list("my_cmap", (
     (0, "#ff00ff"),
@@ -28,8 +26,9 @@ cmap = LinearSegmentedColormap.from_list("my_cmap", (
 ))
 
 
-def make_fig(cell: tuple[int, int], data: NDArray, title: str):
-    ax: Axes3D = fig.add_subplot(gs[cell], projection="3d")
+def make_fig(data: NDArray, title: str):
+    fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    ax: Axes3D
 
     surf = ax.plot_surface(delay, buf_size, data,
                            cmap=cmap, vmin=0, vmax=tmax)
@@ -41,17 +40,24 @@ def make_fig(cell: tuple[int, int], data: NDArray, title: str):
     ax.view_init(azim=135)
     ax.set_title(title)
 
-    return surf
+    return fig, surf
 
 
-make_fig((0, 0), time_plain, "Classical algorithm")
-make_fig((0, 1), time_pqc, "Post-quantum algorithm")
-surf = make_fig((0, 2), time_caching, "Post-quantum algorithm and caching")
+fig_plain, _ = make_fig(time_plain, "Classical algorithm")
+fig_pqc, _ = make_fig(time_pqc, "Post-quantum algorithm")
+fig_client_caching, _ = make_fig(time_client_caching, "Post-quantum algorithm and client-side caching")
+fig_caching, surf = make_fig(time_caching, "Post-quantum algorithm and server-side caching")
 
-cax = fig.add_subplot(gs[0, 3])
-fig.colorbar(surf, cax=cax)
+fig_cb, cax = plt.subplots()
+fig_cb.set_figwidth(0.5)
+fig_cb.colorbar(surf, cax=cax)
 
-gs.tight_layout(fig, w_pad=8)
-
-plt.show()
-fig.savefig("../out/combined.png", transparent=True)
+fig_plain.tight_layout()
+fig_plain.savefig("../out/fig_plain.png")
+fig_pqc.tight_layout()
+fig_pqc.savefig("../out/fig_pqc.png")
+fig_caching.tight_layout()
+fig_caching.savefig("../out/fig_caching.png")
+fig_client_caching.tight_layout()
+fig_client_caching.savefig("../out/fig_client_caching.png")
+fig_cb.savefig("../out/fig_cb.png", bbox_inches="tight")

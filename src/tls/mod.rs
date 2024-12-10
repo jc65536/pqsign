@@ -1,6 +1,7 @@
 pub mod plain;
 pub mod pqc;
 pub mod pqccache;
+pub mod clientcache;
 
 use std::{
     io::{Read, Write},

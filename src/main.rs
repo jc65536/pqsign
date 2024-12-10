@@ -2,7 +2,7 @@ use std::{io::Write, net::TcpStream, time::Instant};
 
 use ndarray_npy::write_npy;
 use netsim::simulator::{run, Endpoint};
-use pqsign::tls::{plain::PlainTls, pqc::PqcTls, pqccache::PqcWithCachingTls, Tls};
+use pqsign::tls::{clientcache::ClientCachingTls, plain::PlainTls, pqc::PqcTls, pqccache::PqcWithCachingTls, Tls};
 use ndarray::Array2;
 
 fn test_tls<T: Tls>() -> Array2<f64> {
@@ -33,6 +33,10 @@ fn test_tls<T: Tls>() -> Array2<f64> {
 
 fn main() {
     let now = Instant::now();
+    let arr = test_tls::<ClientCachingTls>();
+    println!("Client caching tls done: {} s", now.elapsed().as_secs_f64());
+    write_npy("out/client-caching-tls.npy", &arr).unwrap();
+    return;
     let arr = test_tls::<PlainTls>();
     println!("Plain tls done: {} s", now.elapsed().as_secs_f64());
     write_npy("out/plain-tls.npy", &arr).unwrap();
